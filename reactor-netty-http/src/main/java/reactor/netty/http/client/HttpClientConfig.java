@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2023 VMware, Inc. or its affiliates, All Rights Reserved.
+ * Copyright (c) 2020-2025 VMware, Inc. or its affiliates, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -532,6 +532,7 @@ public final class HttpClientConfig extends ClientTransportConfig<HttpClientConf
 			ConnectionObserver obs,
 			ChannelOperations.OnSetup opsFactory,
 			boolean acceptGzip,
+			boolean copyState,
 			@Nullable ChannelMetricsRecorder metricsRecorder,
 			long responseTimeoutMillis,
 			@Nullable Function<String, String> uriTagValue) {
@@ -583,6 +584,9 @@ public final class HttpClientConfig extends ClientTransportConfig<HttpClientConf
 		ChannelOperations<?, ?> ops = opsFactory.create(Connection.from(ch), obs, null);
 		if (ops != null) {
 			ops.bind();
+			if (copyState && ops instanceof HttpClientOperations) {
+				HttpClientOperations.copyState(((HttpClientOperations) ops));
+			}
 		}
 	}
 
@@ -828,7 +832,7 @@ public final class HttpClientConfig extends ClientTransportConfig<HttpClientConf
 					setChannelContext(ch, owner.currentContext());
 				}
 				addStreamHandlers(ch, observer.then(new StreamConnectionObserver(owner.currentContext())), opsFactory,
-						acceptGzip, metricsRecorder, responseTimeoutMillis, uriTagValue);
+						acceptGzip, true, metricsRecorder, responseTimeoutMillis, uriTagValue);
 			}
 			else {
 				// Handle server pushes (inbound streams)

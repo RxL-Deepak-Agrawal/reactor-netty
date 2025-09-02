@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2023 VMware, Inc. or its affiliates, All Rights Reserved.
+ * Copyright (c) 2011-2025 VMware, Inc. or its affiliates, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -881,6 +881,19 @@ class HttpClientOperations extends HttpOperations<NettyInbound, NettyOutbound>
 			if (!rebind(ops)) {
 				log.error(format(channel(), "Error while rebinding websocket in channel attribute: " +
 						get(channel()) + " to " + ops));
+			}
+		}
+	}
+
+	static void copyState(HttpClientOperations streamOps) {
+		ChannelOperations<?, ?> ops = ChannelOperations.get(streamOps.channel().parent());
+		if (ops instanceof HttpClientOperations) {
+			HttpClientOperations parentOps = (HttpClientOperations) ops;
+			if (parentOps.hasSentBody()) {
+				streamOps.markSentHeaderAndBody();
+			}
+			else if (parentOps.hasSentHeaders()) {
+				streamOps.markSentHeaders();
 			}
 		}
 	}

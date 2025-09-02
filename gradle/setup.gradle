@@ -35,14 +35,14 @@ task javadocJar(type: Jar) {
 static def qualifyVersion(String v) {
 	def versionNumber = VersionNumber.parse(v)
 
-	if (versionNumber == VersionNumber.UNKNOWN) return "BAD";
+//	if (versionNumber == VersionNumber.UNKNOWN) return "BAD";
+//
+//	if (versionNumber.qualifier == null || versionNumber.qualifier.size() == 0) return "RELEASE" //new scheme
+//	if (versionNumber.qualifier == "RELEASE") return "RELEASE" //old scheme
+//	if (versionNumber.qualifier.matches("(?:M|RC)\\d+")) return "MILESTONE"
+//	if (versionNumber.qualifier == "SNAPSHOT" || versionNumber.qualifier == "BUILD-SNAPSHOT") return "SNAPSHOT"
 
-	if (versionNumber.qualifier == null || versionNumber.qualifier.size() == 0) return "RELEASE" //new scheme
-	if (versionNumber.qualifier == "RELEASE") return "RELEASE" //old scheme
-	if (versionNumber.qualifier.matches("(?:M|RC)\\d+")) return "MILESTONE"
-	if (versionNumber.qualifier == "SNAPSHOT" || versionNumber.qualifier == "BUILD-SNAPSHOT") return "SNAPSHOT"
-
-	return "BAD"
+	return "RELEASE"
 }
 
 static def outputToGha(String versionType, String fullVersion) {
@@ -90,10 +90,11 @@ publishing {
 		if (qualifyVersion("$version") == "RELEASE") {
 			maven {
 				name = "sonatype"
-				url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2"
+				url = System.getenv("NEXUS_URL")
+				allowInsecureProtocol = System.getenv("NEXUS_ALLOW_INSECURE_PROTOCOL")
 				credentials {
-					username findProperty("sonatypeUsername")
-					password findProperty("sonatypePassword")
+					username = System.getenv("NEXUS_USERNAME")
+					password = System.getenv("NEXUS_PASSWORD")
 				}
 			}
 		}
